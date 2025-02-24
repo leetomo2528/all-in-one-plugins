@@ -2,7 +2,8 @@
   "name": "all-in-one-plugins",
   "version": "1.0.0",
   "description": "An all-in-one plugin for Obsidian",
-  "main": "main.js",
+  "main": "main.mjs",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
