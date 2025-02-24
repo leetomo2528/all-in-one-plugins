@@ -1,0 +1,7 @@
+/* 기존 스타일... */
+
+.markdown-source-view .cm-line,
+.markdown-preview-view p {
+  white-space: nowrap;
+  overflow-x: auto;
+}

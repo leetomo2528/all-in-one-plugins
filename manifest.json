@@ -1,9 +1,17 @@
 {
   "id": "all-in-one-plugins",
-  "name": "All in One Plugins",
+  "name": "All-in-One Plugins",
   "version": "1.0.0",
   "minAppVersion": "0.15.0",
-  "description": "A plugin that combines multiple functionalities",
+  "description": "An all-in-one plugin for Obsidian with various features.",
   "author": "Your Name",
-  "isDesktopOnly": false
+  "authorUrl": "https://your-website.com",
+  "isDesktopOnly": false,
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "unified": "^10.1.2",
+    "remark-parse": "^10.0.1",
+    "remark-stringify": "^10.0.2",
+    "unist-util-visit": "^4.1.2"
+  }
 }
