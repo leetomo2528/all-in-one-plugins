@@ -34,35 +34,38 @@ class AllInOnePlugin extends obsidian.Plugin {
         });
 
         // 표 셀 병합 기능 추가
-        this.registerMarkdownPostProcessor((element, context) => {
-            const tables = element.querySelectorAll('table');
-            tables.forEach(table => {
-                this.processTable(table);
-            });
+        this.registerMarkdownPostProcessor((element) => {
+            this.mergeTableCells(element);
         });
     }
 
-    processTable(table) {
-        const rows = table.querySelectorAll('tr');
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td, th');
-            let currentCell = null;
-            let colspan = 1;
-            cells.forEach((cell, index) => {
-                if (cell.textContent.trim() === '>>') {
-                    colspan++;
-                    cell.remove();
-                } else {
-                    if (currentCell) {
-                        currentCell.setAttribute('colspan', colspan);
-                        colspan = 1;
+    mergeTableCells(element) {
+        const tables = element.querySelectorAll('table');
+        tables.forEach(table => {
+            const rows = Array.from(table.querySelectorAll('tr'));
+            rows.forEach((row, rowIndex) => {
+                const cells = Array.from(row.querySelectorAll('td, th'));
+                cells.forEach((cell, cellIndex) => {
+                    if (cell.textContent.trim() === '<') {
+                        // 왼쪽 셀과 병합
+                        if (cellIndex > 0) {
+                            const prevCell = cells[cellIndex - 1];
+                            prevCell.colSpan = (prevCell.colSpan || 1) + 1;
+                            prevCell.textContent += ' ' + cell.textContent.trim();
+                            cell.remove();
+                        }
+                    } else if (cell.textContent.trim() === '^' && rowIndex > 0) {
+                        // 위쪽 셀과 병합
+                        const aboveRow = rows[rowIndex - 1];
+                        const aboveCell = aboveRow.querySelectorAll('td, th')[cellIndex];
+                        if (aboveCell) {
+                            aboveCell.rowSpan = (aboveCell.rowSpan || 1) + 1;
+                            aboveCell.textContent += ' ' + cell.textContent.trim();
+                            cell.remove();
+                        }
                     }
-                    currentCell = cell;
-                }
+                });
             });
-            if (currentCell && colspan > 1) {
-                currentCell.setAttribute('colspan', colspan);
-            }
         });
     }
 
