@@ -5,6 +5,18 @@ class AllInOnePlugin extends obsidian.Plugin {
         console.log('All-in-One 플러그인 로딩 중');
 
         // 스타일 추가
+        this.addStyle();
+
+        // PDF 추출 기능 추가
+        this.addPdfExportCommand();
+
+        // 표 처리 기능 추가
+        this.registerMarkdownPostProcessor((element, context) => {
+            this.processTable(element);
+        });
+    }
+
+    addStyle() {
         this.registerMarkdownPostProcessor((element) => {
             element.classList.add('all-in-one-plugin-styles');
         });
@@ -18,8 +30,9 @@ class AllInOnePlugin extends obsidian.Plugin {
                 }
             `
         }));
+    }
 
-        // PDF 추출 기능 추가
+    addPdfExportCommand() {
         this.addCommand({
             id: 'export-to-pdf',
             name: 'PDF로 내보내기',
@@ -32,40 +45,51 @@ class AllInOnePlugin extends obsidian.Plugin {
                 }
             }
         });
+    }
 
-        // 표 셀 병합 기능 추가
-        this.registerMarkdownPostProcessor((element) => {
-            this.mergeTableCells(element);
+    processTable(element) {
+        const tables = element.querySelectorAll('table');
+        tables.forEach(table => {
+            this.mergeCells(table);
+            this.processVerticalHeaders(table);
         });
     }
 
-    mergeTableCells(element) {
-        const tables = element.querySelectorAll('table');
-        tables.forEach(table => {
-            const rows = Array.from(table.querySelectorAll('tr'));
-            rows.forEach((row, rowIndex) => {
-                const cells = Array.from(row.querySelectorAll('td, th'));
-                cells.forEach((cell, cellIndex) => {
-                    if (cell.textContent.trim() === '<') {
-                        // 왼쪽 셀과 병합
-                        if (cellIndex > 0) {
-                            const prevCell = cells[cellIndex - 1];
-                            prevCell.colSpan = (prevCell.colSpan || 1) + 1;
-                            prevCell.textContent += ' ' + cell.textContent.trim();
-                            cell.remove();
-                        }
-                    } else if (cell.textContent.trim() === '^' && rowIndex > 0) {
-                        // 위쪽 셀과 병합
-                        const aboveRow = rows[rowIndex - 1];
-                        const aboveCell = aboveRow.querySelectorAll('td, th')[cellIndex];
-                        if (aboveCell) {
-                            aboveCell.rowSpan = (aboveCell.rowSpan || 1) + 1;
-                            aboveCell.textContent += ' ' + cell.textContent.trim();
-                            cell.remove();
-                        }
+    mergeCells(table) {
+        const rows = Array.from(table.querySelectorAll('tr'));
+        for (let i = 0; i < rows.length; i++) {
+            const cells = Array.from(rows[i].querySelectorAll('td, th'));
+            for (let j = 0; j < cells.length; j++) {
+                const cell = cells[j];
+                if (cell.textContent.trim() === '<' && j > 0) {
+                    const prevCell = cells[j - 1];
+                    prevCell.colSpan = (prevCell.colSpan || 1) + 1;
+                    cell.remove();
+                } else if (cell.textContent.trim() === '^' && i > 0) {
+                    const aboveCell = rows[i - 1].querySelectorAll('td, th')[j];
+                    if (aboveCell) {
+                        aboveCell.rowSpan = (aboveCell.rowSpan || 1) + 1;
+                        cell.remove();
+                    }
+                }
+            }
+        }
+    }
+
+    processVerticalHeaders(table) {
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const firstRow = rows[0];
+        const cells = Array.from(firstRow.querySelectorAll('td, th'));
+        
+        cells.forEach((cell, index) => {
+            if (cell.textContent.trim() === '-') {
+                rows.forEach(row => {
+                    const verticalHeader = row.querySelectorAll('td, th')[index];
+                    if (verticalHeader) {
+                        verticalHeader.style.fontWeight = 'bold';
                     }
                 });
-            });
+            }
         });
     }
 
